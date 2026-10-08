@@ -48,13 +48,13 @@ def configure_page() -> None:
         .featured-lesson { background:#fff4df; border-color:#e4bd7e; }
         .featured-lesson:after { background:#f2c879; opacity:.8; }
         .featured-lesson .eyebrow { color:#a45e20; }
-        .lesson-badge { display:inline-block; margin-bottom:10px; padding:4px 8px; border-radius:999px; background:#18382d; color:#fff; font-size:10px; font-weight:700; letter-spacing:.7px; text-transform:uppercase; }
+        .lesson-badge { position:absolute; top:14px; right:14px; display:inline-block; padding:4px 8px; border-radius:999px; background:#18382d; color:#fff; font-size:10px; font-weight:700; letter-spacing:.7px; text-transform:uppercase; }
 
         /* ---- Whole-card click: the real Streamlit button becomes an invisible
            overlay covering the card. If :has() is unsupported, the button simply
            shows normally below the card (graceful degradation). ---- */
-        .lesson-click { cursor:pointer; transition:transform .16s ease, box-shadow .16s ease; }
-        .lesson-click:hover { transform:translateY(-3px); box-shadow:0 16px 32px rgba(32,61,45,.12); }
+        .lesson-click { cursor:pointer; transition:min-height .18s ease, transform .16s ease, box-shadow .16s ease; }
+        .lesson-click:hover { min-height:208px; transform:translateY(-3px); box-shadow:0 16px 32px rgba(32,61,45,.12); }
         div[data-testid="stElementContainer"]:has(.lesson-click) { position:relative; }
         div[data-testid="stElementContainer"]:has(.lesson-click) + div[data-testid="stElementContainer"]:has([data-testid="stButton"]) {
             position:absolute; inset:0; margin:0 !important;

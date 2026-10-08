@@ -60,7 +60,7 @@ class DashboardPage:
             with column:
                 is_done = lesson.title in done
                 card_class = "card lesson-card lesson-click featured-lesson" if lesson.featured else "card lesson-card lesson-click"
-                badge = '<div class="lesson-badge">Featured listening</div>' if lesson.featured else ""
+                badge = '<div class="lesson-badge">Featured listening</div>' if (lesson.featured and not is_done) else ""
                 done_badge = '<div class="lesson-badge" style="background:var(--green);">✓ Completed</div>' if is_done else ""
                 st.markdown(
                     f'<div class="{card_class}"><div class="lesson-icon">{lesson.icon}</div>{badge}{done_badge}'
