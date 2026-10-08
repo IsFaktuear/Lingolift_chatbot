@@ -45,16 +45,18 @@ def configure_page() -> None:
         .lesson-card { min-height:172px; position:relative; overflow:hidden; }
         .lesson-card:after { content:''; position:absolute; right:-30px; bottom:-34px; width:110px; height:110px; border-radius:50%; background:var(--mint); opacity:.7; }
         .lesson-icon { font-size:26px; margin-bottom:12px; } .lesson-meta { color:var(--muted); font-size:12px; }
-        .featured-lesson { background:#fff4df; border-color:#e4bd7e; }
-        .featured-lesson:after { background:#f2c879; opacity:.8; }
-        .featured-lesson .eyebrow { color:#a45e20; }
+        /* Featured card looks like the others at rest; the warm tint now lives on hover (all cards). */
+        .featured-lesson { background:rgba(255,255,255,.9); border-color:var(--line); }
+        .featured-lesson:after { background:var(--mint); opacity:.7; }
         .lesson-badge { position:absolute; top:14px; right:14px; display:inline-block; padding:4px 8px; border-radius:999px; background:#18382d; color:#fff; font-size:10px; font-weight:700; letter-spacing:.7px; text-transform:uppercase; }
 
         /* ---- Whole-card click: the real Streamlit button becomes an invisible
            overlay covering the card. If :has() is unsupported, the button simply
            shows normally below the card (graceful degradation). ---- */
-        .lesson-click { cursor:pointer; transition:min-height .18s ease, transform .16s ease, box-shadow .16s ease; }
-        .lesson-click:hover { min-height:208px; transform:translateY(-3px); box-shadow:0 16px 32px rgba(32,61,45,.12); }
+        .lesson-click { cursor:pointer; transition:min-height .18s ease, transform .16s ease, box-shadow .16s ease, background-color .18s ease, border-color .18s ease; }
+        .lesson-click:hover { min-height:208px; transform:translateY(-3px); box-shadow:0 16px 32px rgba(32,61,45,.12); background:#fff4df; border-color:#e4bd7e; }
+        .lesson-click:hover:after { background:#f2c879; opacity:.8; }
+        .lesson-click:hover .eyebrow { color:#a45e20; }
         div[data-testid="stElementContainer"]:has(.lesson-click) { position:relative; }
         div[data-testid="stElementContainer"]:has(.lesson-click) + div[data-testid="stElementContainer"]:has([data-testid="stButton"]) {
             position:absolute; inset:0; margin:0 !important;
