@@ -51,6 +51,10 @@ class DashboardPage:
                 st.markdown(f'<div class="{card_class}"><div class="lesson-icon">{lesson.icon}</div>{badge}<div class="eyebrow">{lesson.category}</div><h3>{lesson.title}</h3><div class="lesson-meta">{lesson.meta}</div></div>', unsafe_allow_html=True)
                 if lesson.title in done:
                     st.markdown('<div class="eyebrow">✓ Completed</div>', unsafe_allow_html=True)
+                    if st.button("Batalkan", key=f"undo-{lesson.title}", use_container_width=True):
+                        if self.store.uncomplete_lesson(lesson.title):
+                            st.toast("Tandai selesai dibatalkan, XP dikembalikan ↩️")
+                        st.rerun()
                     continue
                 if st.button(button_label, key=f"open-{lesson.title}", use_container_width=True):
                     st.session_state.active_lesson = lesson.title
@@ -91,6 +95,10 @@ class DashboardPage:
         done = self.store.lessons_done()
         if lesson.title in done:
             st.markdown('<div class="eyebrow">✓ Completed</div>', unsafe_allow_html=True)
+            if st.button("Batalkan tandai selesai", key=f"undo-detail-{lesson.title}", use_container_width=True):
+                if self.store.uncomplete_lesson(lesson.title):
+                    st.toast("Tandai selesai dibatalkan, XP dikembalikan ↩️")
+                st.rerun()
         elif st.button(f"Tandai selesai · +{lesson.xp} XP", key=f"done-detail-{lesson.title}", use_container_width=True):
             if self.store.complete_lesson(lesson.title, lesson.xp):
                 st.toast(f"Lesson selesai! +{lesson.xp} XP 🎉")

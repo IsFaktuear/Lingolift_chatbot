@@ -150,6 +150,15 @@ class Store:
                 return True
         return False
 
+    def uncomplete_lesson(self, title: str) -> bool:
+        """Undo a lesson completion, removing its XP as well. Idempotent."""
+        with self._db() as conn:
+            cur = conn.execute("DELETE FROM lessons_done WHERE title = ?", (title,))
+            if cur.rowcount:
+                conn.execute("DELETE FROM xp_events WHERE reason = ?", (f"lesson: {title}",))
+                return True
+        return False
+
     def lessons_done(self) -> set[str]:
         with self._db() as conn:
             rows = conn.execute("SELECT title FROM lessons_done").fetchall()
