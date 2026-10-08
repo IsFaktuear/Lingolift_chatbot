@@ -4,6 +4,18 @@ from content import LESSONS, QUICK_PRACTICE_PROMPTS
 from storage import Store, level_for_xp
 
 
+@st.dialog("Batalkan lesson?")
+def _confirm_undo_dialog(title: str, xp: int, store: Store) -> None:
+    st.write(f'Yakin mau batalkan "{title}"? Progress-nya dihapus dan {xp} XP dikembalikan.')
+    yes, no = st.columns(2)
+    if yes.button("Ya, batalkan", use_container_width=True):
+        if store.uncomplete_lesson(title):
+            st.toast("Tandai selesai dibatalkan, XP dikembalikan ↩️")
+        st.rerun()
+    if no.button("Gak jadi", use_container_width=True):
+        st.rerun()
+
+
 class DashboardPage:
     def __init__(self, store: Store) -> None:
         self.store = store
@@ -52,9 +64,7 @@ class DashboardPage:
                 if lesson.title in done:
                     st.markdown('<div class="eyebrow">✓ Completed</div>', unsafe_allow_html=True)
                     if st.button("Batalkan", key=f"undo-{lesson.title}", use_container_width=True):
-                        if self.store.uncomplete_lesson(lesson.title):
-                            st.toast("Tandai selesai dibatalkan, XP dikembalikan ↩️")
-                        st.rerun()
+                        _confirm_undo_dialog(lesson.title, lesson.xp, self.store)
                     continue
                 if st.button(button_label, key=f"open-{lesson.title}", use_container_width=True):
                     st.session_state.active_lesson = lesson.title
@@ -96,9 +106,7 @@ class DashboardPage:
         if lesson.title in done:
             st.markdown('<div class="eyebrow">✓ Completed</div>', unsafe_allow_html=True)
             if st.button("Batalkan tandai selesai", key=f"undo-detail-{lesson.title}", use_container_width=True):
-                if self.store.uncomplete_lesson(lesson.title):
-                    st.toast("Tandai selesai dibatalkan, XP dikembalikan ↩️")
-                st.rerun()
+                _confirm_undo_dialog(lesson.title, lesson.xp, self.store)
         elif st.button(f"Tandai selesai · +{lesson.xp} XP", key=f"done-detail-{lesson.title}", use_container_width=True):
             if self.store.complete_lesson(lesson.title, lesson.xp):
                 st.toast(f"Lesson selesai! +{lesson.xp} XP 🎉")
