@@ -15,6 +15,13 @@ class QuizQuestion:
 
 
 @dataclass(frozen=True)
+class VocabQuizItem:
+    prompt: str
+    options: tuple[str, ...]
+    answer: int  # index of the correct option
+
+
+@dataclass(frozen=True)
 class Lesson:
     icon: str
     category: str

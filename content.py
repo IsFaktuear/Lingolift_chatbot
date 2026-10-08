@@ -1,4 +1,9 @@
-from models import Lesson, LessonStep, QuizQuestion, VocabularyWord
+import random
+
+from models import Lesson, LessonStep, QuizQuestion, VocabQuizItem, VocabularyWord
+
+QUIZ_ROUND_SIZE = 5
+XP_PER_QUIZ_ANSWER = 5
 
 
 LESSONS = [
@@ -170,3 +175,38 @@ QUICK_PRACTICE_PROMPTS = [
     "Order a coffee",
     "Talk about last weekend",
 ]
+
+
+def build_vocab_quiz(
+    words: list[VocabularyWord],
+    n: int = QUIZ_ROUND_SIZE,
+    seed: int | None = None,
+) -> list[VocabQuizItem]:
+    """Build a multiple-choice quiz round from the word bank.
+
+    Each item asks for a meaning given a phrase, or a phrase given a meaning,
+    with 3 distractors drawn from the other words. Needs at least 4 words.
+    """
+    rng = random.Random(seed)
+    if len(words) < 4:
+        return []
+    items: list[VocabQuizItem] = []
+    for word in rng.sample(words, min(n, len(words))):
+        others = [w for w in words if w.phrase != word.phrase]
+        if rng.random() < 0.5:
+            prompt = f'What does "{word.phrase}" mean?'
+            correct, distractors = word.meaning, rng.sample([w.meaning for w in others], 3)
+        else:
+            prompt = f'Which phrase means "{word.meaning}"?'
+            correct, distractors = word.phrase, rng.sample([w.phrase for w in others], 3)
+        options = [correct, *distractors]
+        order = list(range(len(options)))
+        rng.shuffle(order)
+        items.append(
+            VocabQuizItem(
+                prompt=prompt,
+                options=tuple(options[i] for i in order),
+                answer=order.index(0),
+            )
+        )
+    return items

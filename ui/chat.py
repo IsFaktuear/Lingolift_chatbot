@@ -20,10 +20,28 @@ class ChatPage:
         st.markdown('</div>', unsafe_allow_html=True)
 
         chat_prompt = st.chat_input("Type a message in English...")
+        voice = st.audio_input("🎤 Or speak instead", key="voice-input")
         lesson_prompt = st.session_state.pop("lesson_prompt", None)
         prompt = lesson_prompt or chat_prompt
         if prompt:
             self._send_message(prompt)
+        elif voice is not None:
+            self._handle_voice(voice)
+
+    def _handle_voice(self, voice) -> None:
+        # Guard against re-processing the same recording on reruns.
+        if st.session_state.get("last_voice_id") == voice.id:
+            return
+        st.session_state.last_voice_id = voice.id
+        with st.spinner("Transcribing your voice..."):
+            text = self.tutor.transcribe(voice.getvalue())
+        if text:
+            self._send_message(text)
+        else:
+            st.info(
+                "Voice transcription needs an AI API key (`OPENAI_API_KEY`). "
+                "You can still type your message."
+            )
 
     def _send_message(self, prompt: str) -> None:
         st.session_state.messages.append({"role": "user", "content": prompt})
@@ -32,11 +50,10 @@ class ChatPage:
         with st.chat_message("user"):
             st.markdown(prompt)
         with st.chat_message("assistant"):
-            with st.spinner("Thinking..."):
-                try:
-                    answer = self.tutor.reply(st.session_state.messages)
-                except Exception:
-                    answer = "I couldn't reach the AI service right now. Check your API settings."
-            st.markdown(answer)
+            try:
+                answer = st.write_stream(self.tutor.reply_stream(st.session_state.messages))
+            except Exception:
+                answer = self.tutor.reply(st.session_state.messages)
+                st.markdown(answer)
         st.session_state.messages.append({"role": "assistant", "content": answer})
         self.store.add_message("assistant", answer)

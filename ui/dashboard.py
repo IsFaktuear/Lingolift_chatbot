@@ -129,7 +129,7 @@ class DashboardPage:
         media_col, note_col = st.columns([1.4, 1])
         with media_col:
             st.markdown('<div class="audio-shell"><div class="eyebrow" style="color:#b8e7cf">Today\'s audio</div><div class="audio-title">A morning in London</div><div style="color:#c7d8cf;font-size:13px">Listen for the way people talk about routines.</div></div>', unsafe_allow_html=True)
-            st.audio("https://www2.cs.uic.edu/~i101/SoundFiles/StarWars60.wav")
+            st.audio("assets/morning-routine.mp3")
         with note_col:
             st.markdown('<div class="card"><div class="eyebrow">Phrase of the day</div><h3>"I\'m up for it."</h3><p class="muted">Use this when you want to say you are interested or willing to do something.</p><p>"Want to try the new cafe?"<br><span class="word">"Sure, I\'m up for it!"</span></p></div>', unsafe_allow_html=True)
 
