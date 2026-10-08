@@ -63,6 +63,9 @@ class DashboardPage:
                 st.markdown(f'<div class="{card_class}"><div class="lesson-icon">{lesson.icon}</div>{badge}<div class="eyebrow">{lesson.category}</div><h3>{lesson.title}</h3><div class="lesson-meta">{lesson.meta}</div></div>', unsafe_allow_html=True)
                 if lesson.title in done:
                     st.markdown('<div class="eyebrow">✓ Completed</div>', unsafe_allow_html=True)
+                    if st.button("Review lesson", key=f"open-{lesson.title}", use_container_width=True):
+                        st.session_state.active_lesson = lesson.title
+                        st.rerun()
                     if st.button("Batalkan", key=f"undo-{lesson.title}", use_container_width=True):
                         _confirm_undo_dialog(lesson.title, lesson.xp, self.store)
                     continue
