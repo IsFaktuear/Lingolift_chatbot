@@ -12,8 +12,16 @@ def configure_page() -> None:
         """
         <style>
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
-        :root { --ink:#17221f; --muted:#6d7771; --paper:#f7f8f3; --mint:#b8e7cf; --green:#1e6b4b; --coral:#ef836d; --line:#dce4dc; }
+        :root {
+            --ink:#17221f; --muted:#6d7771; --paper:#f7f8f3;
+            --mint:#b8e7cf; --green:#1e6b4b; --green-dark:#14523a;
+            --coral:#ef836d; --line:#dce4dc;
+            --radius:18px;
+            --shadow-sm:0 2px 8px rgba(32,61,45,.06);
+            --shadow-md:0 10px 28px rgba(32,61,45,.07);
+        }
         * { font-family:'DM Sans',sans-serif; }
+        ::selection { background:var(--mint); }
         .stApp { background:var(--paper); color:var(--ink); background-image:radial-gradient(#dbe7dd .7px,transparent .7px); background-size:18px 18px; }
         [data-testid='stSidebar'] { background:#eef4ed; border-right:1px solid var(--line); }
         [data-testid='stSidebar'] > div:first-child { padding-top:2rem; }
@@ -31,7 +39,7 @@ def configure_page() -> None:
         .hero-note { color:var(--green); font-weight:700; }
         .section-label { display:flex; justify-content:space-between; align-items:center; margin:1.7rem 0 .9rem; }
         .section-label span { color:var(--muted); font-size:13px; }
-        .card { background:rgba(255,255,255,.88); border:1px solid var(--line); border-radius:18px; padding:18px; box-shadow:0 10px 28px rgba(32,61,45,.05); }
+        .card { background:rgba(255,255,255,.9); border:1px solid var(--line); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow-md); }
         .stat-number { font-family:'Space Grotesk'; font-size:28px; font-weight:700; }
         .stat-label { color:var(--muted); font-size:12px; margin-top:2px; }
         .lesson-card { min-height:172px; position:relative; overflow:hidden; }
@@ -41,19 +49,75 @@ def configure_page() -> None:
         .featured-lesson:after { background:#f2c879; opacity:.8; }
         .featured-lesson .eyebrow { color:#a45e20; }
         .lesson-badge { display:inline-block; margin-bottom:10px; padding:4px 8px; border-radius:999px; background:#18382d; color:#fff; font-size:10px; font-weight:700; letter-spacing:.7px; text-transform:uppercase; }
+
+        /* ---- Whole-card click: the real Streamlit button becomes an invisible
+           overlay covering the card. If :has() is unsupported, the button simply
+           shows normally below the card (graceful degradation). ---- */
+        .lesson-click { cursor:pointer; transition:transform .16s ease, box-shadow .16s ease; }
+        .lesson-click:hover { transform:translateY(-3px); box-shadow:0 16px 32px rgba(32,61,45,.12); }
+        div[data-testid="stElementContainer"]:has(.lesson-click) { position:relative; }
+        div[data-testid="stElementContainer"]:has(.lesson-click) + div[data-testid="stElementContainer"]:has([data-testid="stButton"]) {
+            position:absolute; inset:0; margin:0 !important;
+        }
+        div[data-testid="stElementContainer"]:has(.lesson-click) + div[data-testid="stElementContainer"] [data-testid="stButton"],
+        div[data-testid="stElementContainer"]:has(.lesson-click) + div[data-testid="stElementContainer"] [data-testid="stButton"] > button {
+            width:100%; height:100%; margin:0; padding:0;
+        }
+        div[data-testid="stElementContainer"]:has(.lesson-click) + div[data-testid="stElementContainer"] [data-testid="stButton"] > button {
+            opacity:0; border:0; box-shadow:none; cursor:pointer; border-radius:var(--radius);
+        }
+        div[data-testid="stElementContainer"]:has(.lesson-click) + div[data-testid="stElementContainer"] [data-testid="stButton"] > button:focus-visible {
+            opacity:1; outline:2px solid var(--green); outline-offset:3px;
+        }
+
         .audio-shell { background:#18382d; border-radius:17px; padding:16px; color:white; }
         .audio-title { font-family:'Space Grotesk'; font-size:18px; margin-bottom:8px; }
         .word { color:var(--coral); font-weight:700; }
         .chat-wrap { background:rgba(255,255,255,.7); border:1px solid var(--line); border-radius:18px; padding:12px; }
         .tip { background:#fff0db; border-left:4px solid var(--coral); border-radius:8px; padding:12px 14px; font-size:13px; line-height:1.5; }
-        .stButton > button { border-radius:10px; border:1px solid var(--line); font-weight:600; color:var(--ink); }
-        .stButton > button:hover { border-color:var(--green); color:var(--green); }
+
+        /* ---- Chunky pill buttons ---- */
+        .stButton > button {
+            border-radius:999px; border:1px solid var(--line);
+            background:#fff; color:var(--ink); font-weight:700;
+            padding:.5rem 1.25rem; box-shadow:0 3px 0 rgba(32,61,45,.10);
+            transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+        }
+        .stButton > button:hover { border-color:var(--green); color:var(--green); transform:translateY(-1px); box-shadow:0 4px 0 rgba(32,61,45,.10); }
+        .stButton > button:active { transform:translateY(2px); box-shadow:none; }
+        .stButton > button:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
+        .stButton > button[kind="primary"] { background:var(--green); border-color:var(--green-dark); color:#fff; box-shadow:0 3px 0 var(--green-dark); }
+        .stButton > button[kind="primary"]:hover { background:#257052; border-color:var(--green-dark); color:#fff; }
+
+        /* ---- Quiz radios as cards ---- */
+        div[data-testid="stRadio"] [role="radiogroup"] > label[data-baseweb="radio"] {
+            background:#fff; border:1px solid var(--line); border-radius:12px;
+            padding:10px 14px; margin-bottom:8px; transition:border-color .12s ease, background .12s ease;
+        }
+        div[data-testid="stRadio"] [role="radiogroup"] > label[data-baseweb="radio"]:hover { border-color:var(--green); }
+        div[data-testid="stRadio"] [role="radiogroup"] > label[data-baseweb="radio"]:has(input:checked) {
+            border-color:var(--green); background:#eef7f0; font-weight:600;
+        }
+
+        /* ---- Expanders ---- */
+        details[data-testid="stExpander"] {
+            background:rgba(255,255,255,.85); border:1px solid var(--line);
+            border-radius:var(--radius); box-shadow:var(--shadow-sm);
+        }
+        details[data-testid="stExpander"] summary { font-weight:700; border-radius:var(--radius); }
+        details[data-testid="stExpander"] summary:hover { color:var(--green); }
+
+        /* ---- Inputs ---- */
+        div[data-testid="stTextInput"] input { border-radius:12px; }
+        div[data-testid="stTextInput"] input:focus { border-color:var(--green); box-shadow:0 0 0 1px var(--green); }
+        div[data-testid="stSelectbox"] div[data-baseweb="select"] > div { border-radius:12px; }
+
         .stProgress > div > div > div { background:var(--green); }
         [data-testid='stChatInput'] { background:transparent; border:0; box-shadow:none; padding:0; }
         [data-testid='stChatInput'] textarea { background:transparent; border:0; border-bottom:1px solid var(--line); border-radius:0; box-shadow:none; padding-left:0; }
         [data-testid='stChatInput'] textarea:focus { border-bottom-color:var(--green); box-shadow:none; }
         [data-testid='stMetricValue'] { font-family:'Space Grotesk'; }
-        [data-testid='stChatMessage'] { background:rgba(255,255,255,.78); border-radius:14px; }
+        div[data-testid='stChatMessage'] { background:rgba(255,255,255,.85); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow-sm); }
         </style>
         """,
         unsafe_allow_html=True,

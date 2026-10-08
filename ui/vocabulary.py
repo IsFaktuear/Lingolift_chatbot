@@ -28,7 +28,7 @@ class VocabularyPage:
             if len(words) < 4:
                 st.info("Add at least 4 words to your bank to unlock the quiz.")
                 return
-            if st.button("Start new round", key="vquiz-start"):
+            if st.button("Start new round", key="vquiz-start", type="primary"):
                 round_id = st.session_state.get("vquiz-round", 0) + 1
                 st.session_state["vquiz-round"] = round_id
                 st.session_state.vquiz = {
@@ -61,7 +61,7 @@ class VocabularyPage:
                     else:
                         st.error(f"Answer: {item.options[item.answer]}")
             if not quiz["scored"]:
-                if st.button("Check answers", key="vquiz-check"):
+                if st.button("Check answers", key="vquiz-check", type="primary"):
                     correct = sum(
                         1
                         for i, item in enumerate(items)

@@ -1,6 +1,7 @@
 import streamlit as st
 
 from content import LESSONS, QUICK_PRACTICE_PROMPTS
+from datetime import datetime
 from storage import Store, level_for_xp
 
 
@@ -28,7 +29,7 @@ class DashboardPage:
                 self._lesson_detail(lesson)
                 return
             st.session_state.active_lesson = None
-        st.markdown('<div class="hero"><div class="eyebrow">Tuesday · Intermediate track</div><h1>Make English part<br>of your everyday.</h1><div class="hero-copy">A friendly space to listen, speak, and build confidence one useful phrase at a time. <span class="hero-note">You are doing better than you think.</span></div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="hero"><div class="eyebrow">{datetime.now().strftime("%A")} · Intermediate track</div><h1>Make English part<br>of your everyday.</h1><div class="hero-copy">A friendly space to listen, speak, and build confidence one useful phrase at a time. <span class="hero-note">You are doing better than you think.</span></div></div>', unsafe_allow_html=True)
         self._stats()
         self._lessons()
         self._audio_and_phrase()
@@ -57,19 +58,26 @@ class DashboardPage:
         columns = st.columns(3)
         for column, lesson in zip(columns, LESSONS):
             with column:
-                card_class = "card lesson-card featured-lesson" if lesson.featured else "card lesson-card"
+                is_done = lesson.title in done
+                card_class = "card lesson-card lesson-click featured-lesson" if lesson.featured else "card lesson-card lesson-click"
                 badge = '<div class="lesson-badge">Featured listening</div>' if lesson.featured else ""
-                button_label = "Start listening" if lesson.featured else "Open lesson"
-                st.markdown(f'<div class="{card_class}"><div class="lesson-icon">{lesson.icon}</div>{badge}<div class="eyebrow">{lesson.category}</div><h3>{lesson.title}</h3><div class="lesson-meta">{lesson.meta}</div></div>', unsafe_allow_html=True)
-                if lesson.title in done:
-                    st.markdown('<div class="eyebrow">✓ Completed</div>', unsafe_allow_html=True)
-                    if st.button("Review lesson", key=f"open-{lesson.title}", use_container_width=True):
+                done_badge = '<div class="lesson-badge" style="background:var(--green);">✓ Completed</div>' if is_done else ""
+                st.markdown(
+                    f'<div class="{card_class}"><div class="lesson-icon">{lesson.icon}</div>{badge}{done_badge}'
+                    f'<div class="eyebrow">{lesson.category}</div><h3>{lesson.title}</h3>'
+                    f'<div class="lesson-meta">{lesson.meta}</div></div>',
+                    unsafe_allow_html=True,
+                )
+                # The first button right after the card becomes an invisible overlay,
+                # so the whole card is clickable. It must stay directly adjacent.
+                if is_done:
+                    if st.button("Review lesson", key=f"open-{lesson.title}"):
                         st.session_state.active_lesson = lesson.title
                         st.rerun()
                     if st.button("Batalkan", key=f"undo-{lesson.title}", use_container_width=True):
                         _confirm_undo_dialog(lesson.title, lesson.xp, self.store)
                     continue
-                if st.button(button_label, key=f"open-{lesson.title}", use_container_width=True):
+                if st.button("Open lesson", key=f"open-{lesson.title}"):
                     st.session_state.active_lesson = lesson.title
                     st.rerun()
                 if st.button(f"Tandai selesai · +{lesson.xp} XP", key=f"done-{lesson.title}", use_container_width=True):
@@ -100,7 +108,7 @@ class DashboardPage:
             self._lesson_quiz(lesson)
 
         st.markdown('<div class="section-label"><h2>Practice</h2></div>', unsafe_allow_html=True)
-        if st.button("Practice this with AI 💬", key=f"practice-{lesson.title}", use_container_width=True):
+        if st.button("Practice this with AI 💬", key=f"practice-{lesson.title}", type="primary", use_container_width=True):
             st.session_state.lesson_prompt = lesson.practice_prompt
             st.session_state.active_lesson = None
             st.switch_page(st.session_state.page_routes["Practice with AI"])
@@ -134,7 +142,7 @@ class DashboardPage:
                     st.error(f"Not quite. The answer is: {question.options[question.answer]}")
         col_a, col_b = st.columns([1, 3])
         with col_a:
-            if st.button("Check my answers", key=f"quiz-check-{lesson.title}"):
+            if st.button("Check my answers", key=f"quiz-check-{lesson.title}", type="primary"):
                 st.session_state[checked_key] = True
                 st.rerun()
         if st.session_state.get(checked_key):
