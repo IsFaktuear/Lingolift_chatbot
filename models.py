@@ -2,6 +2,19 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
+class LessonStep:
+    heading: str
+    body: str
+
+
+@dataclass(frozen=True)
+class QuizQuestion:
+    question: str
+    options: tuple[str, ...]
+    answer: int  # index of the correct option
+
+
+@dataclass(frozen=True)
 class Lesson:
     icon: str
     category: str
@@ -9,6 +22,10 @@ class Lesson:
     meta: str
     featured: bool = False
     xp: int = 0
+    intro: str = ""
+    steps: tuple[LessonStep, ...] = ()
+    quiz: tuple[QuizQuestion, ...] = ()
+    practice_prompt: str = ""
 
 
 @dataclass(frozen=True)

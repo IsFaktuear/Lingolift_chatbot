@@ -9,6 +9,13 @@ class DashboardPage:
         self.store = store
 
     def render(self) -> None:
+        active = st.session_state.get("active_lesson")
+        if active:
+            lesson = next((l for l in LESSONS if l.title == active), None)
+            if lesson is not None:
+                self._lesson_detail(lesson)
+                return
+            st.session_state.active_lesson = None
         st.markdown('<div class="hero"><div class="eyebrow">Tuesday · Intermediate track</div><h1>Make English part<br>of your everyday.</h1><div class="hero-copy">A friendly space to listen, speak, and build confidence one useful phrase at a time. <span class="hero-note">You are doing better than you think.</span></div></div>', unsafe_allow_html=True)
         self._stats()
         self._lessons()
@@ -46,11 +53,75 @@ class DashboardPage:
                     st.markdown('<div class="eyebrow">✓ Completed</div>', unsafe_allow_html=True)
                     continue
                 if st.button(button_label, key=f"open-{lesson.title}", use_container_width=True):
-                    st.session_state.lesson_prompt = f"Help me practice the lesson: {lesson.title}."
-                    st.switch_page(st.session_state.page_routes["Practice with AI"])
+                    st.session_state.active_lesson = lesson.title
+                    st.rerun()
                 if st.button(f"Tandai selesai · +{lesson.xp} XP", key=f"done-{lesson.title}", use_container_width=True):
                     if self.store.complete_lesson(lesson.title, lesson.xp):
                         st.toast(f"Lesson selesai! +{lesson.xp} XP 🎉")
+                    st.rerun()
+
+    def _lesson_detail(self, lesson) -> None:
+        if st.button("← Back to overview", key="back-overview"):
+            st.session_state.active_lesson = None
+            st.rerun()
+        st.markdown(f'<div class="eyebrow">{lesson.icon} {lesson.category}</div>', unsafe_allow_html=True)
+        st.title(lesson.title)
+        st.caption(lesson.meta)
+        st.markdown(lesson.intro)
+
+        st.markdown('<div class="section-label"><h2>What you will learn</h2></div>', unsafe_allow_html=True)
+        for index, step in enumerate(lesson.steps, start=1):
+            st.markdown(
+                f'<div class="card" style="margin:10px 0">'
+                f'<div class="eyebrow">Step {index}</div>'
+                f"<h3>{step.heading}</h3>"
+                f'<p class="muted">{step.body}</p></div>',
+                unsafe_allow_html=True,
+            )
+
+        if lesson.quiz:
+            self._lesson_quiz(lesson)
+
+        st.markdown('<div class="section-label"><h2>Practice</h2></div>', unsafe_allow_html=True)
+        if st.button("Practice this with AI 💬", key=f"practice-{lesson.title}", use_container_width=True):
+            st.session_state.lesson_prompt = lesson.practice_prompt
+            st.session_state.active_lesson = None
+            st.switch_page(st.session_state.page_routes["Practice with AI"])
+
+        done = self.store.lessons_done()
+        if lesson.title in done:
+            st.markdown('<div class="eyebrow">✓ Completed</div>', unsafe_allow_html=True)
+        elif st.button(f"Tandai selesai · +{lesson.xp} XP", key=f"done-detail-{lesson.title}", use_container_width=True):
+            if self.store.complete_lesson(lesson.title, lesson.xp):
+                st.toast(f"Lesson selesai! +{lesson.xp} XP 🎉")
+            st.rerun()
+
+    def _lesson_quiz(self, lesson) -> None:
+        st.markdown('<div class="section-label"><h2>Quick check</h2><span>Test yourself</span></div>', unsafe_allow_html=True)
+        checked_key = f"quiz-checked-{lesson.title}"
+        for index, question in enumerate(lesson.quiz):
+            st.markdown(f"**{index + 1}. {question.question}**")
+            choice = st.radio(
+                "Choose an answer",
+                options=list(range(len(question.options))),
+                format_func=lambda i, opts=question.options: opts[i],
+                key=f"quiz-{lesson.title}-{index}",
+                label_visibility="collapsed",
+            )
+            if st.session_state.get(checked_key):
+                if choice == question.answer:
+                    st.success("Correct! ✅")
+                else:
+                    st.error(f"Not quite. The answer is: {question.options[question.answer]}")
+        col_a, col_b = st.columns([1, 3])
+        with col_a:
+            if st.button("Check my answers", key=f"quiz-check-{lesson.title}"):
+                st.session_state[checked_key] = True
+                st.rerun()
+        if st.session_state.get(checked_key):
+            with col_b:
+                if st.button("Try again", key=f"quiz-retry-{lesson.title}"):
+                    st.session_state[checked_key] = False
                     st.rerun()
 
     def _audio_and_phrase(self) -> None:
