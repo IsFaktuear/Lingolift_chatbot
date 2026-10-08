@@ -8,6 +8,7 @@ class Lesson:
     title: str
     meta: str
     featured: bool = False
+    xp: int = 0
 
 
 @dataclass(frozen=True)

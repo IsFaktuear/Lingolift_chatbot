@@ -2,9 +2,9 @@ from models import Lesson, VocabularyWord
 
 
 LESSONS = [
-    Lesson("🎧", "Listening", "At the coffee shop", "8 min · 80 XP", featured=True),
-    Lesson("💬", "Speaking", "Small talk starters", "12 min · 120 XP"),
-    Lesson("✍️", "Grammar", "Past experiences", "10 min · 100 XP"),
+    Lesson("🎧", "Listening", "At the coffee shop", "8 min · 80 XP", featured=True, xp=80),
+    Lesson("💬", "Speaking", "Small talk starters", "12 min · 120 XP", xp=120),
+    Lesson("✍️", "Grammar", "Past experiences", "10 min · 100 XP", xp=100),
 ]
 
 VOCABULARY = [
