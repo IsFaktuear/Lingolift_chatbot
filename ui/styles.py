@@ -50,27 +50,13 @@ def configure_page() -> None:
         .featured-lesson:after { background:var(--mint); opacity:.7; }
         .lesson-badge { position:absolute; top:14px; right:14px; display:inline-block; padding:4px 8px; border-radius:999px; background:#18382d; color:#fff; font-size:10px; font-weight:700; letter-spacing:.7px; text-transform:uppercase; }
 
-        /* ---- Whole-card click: the real Streamlit button becomes an invisible
-           overlay covering the card. If :has() is unsupported, the button simply
-           shows normally below the card (graceful degradation). ---- */
+        /* The whole card is a plain link: clickable everywhere, keyboard accessible. */
+        .lesson-link { display:block; text-decoration:none; color:inherit; }
+        .lesson-link:hover { text-decoration:none; color:inherit; }
         .lesson-click { cursor:pointer; transition:min-height .18s ease, transform .16s ease, box-shadow .16s ease, background-color .18s ease, border-color .18s ease; }
         .lesson-click:hover { min-height:208px; transform:translateY(-3px); box-shadow:0 16px 32px rgba(32,61,45,.12); background:#fff4df; border-color:#e4bd7e; }
         .lesson-click:hover:after { background:#f2c879; opacity:.8; }
         .lesson-click:hover .eyebrow { color:#a45e20; }
-        div[data-testid="stElementContainer"]:has(.lesson-click) { position:relative; }
-        div[data-testid="stElementContainer"]:has(.lesson-click) + div[data-testid="stElementContainer"]:has([data-testid="stButton"]) {
-            position:absolute; inset:0; margin:0 !important;
-        }
-        div[data-testid="stElementContainer"]:has(.lesson-click) + div[data-testid="stElementContainer"] [data-testid="stButton"],
-        div[data-testid="stElementContainer"]:has(.lesson-click) + div[data-testid="stElementContainer"] [data-testid="stButton"] > button {
-            width:100%; height:100%; margin:0; padding:0;
-        }
-        div[data-testid="stElementContainer"]:has(.lesson-click) + div[data-testid="stElementContainer"] [data-testid="stButton"] > button {
-            opacity:0; border:0; box-shadow:none; cursor:pointer; border-radius:var(--radius);
-        }
-        div[data-testid="stElementContainer"]:has(.lesson-click) + div[data-testid="stElementContainer"] [data-testid="stButton"] > button:focus-visible {
-            opacity:1; outline:2px solid var(--green); outline-offset:3px;
-        }
 
         .audio-shell { background:#18382d; border-radius:17px; padding:16px; color:white; }
         .audio-title { font-family:'Space Grotesk'; font-size:18px; margin-bottom:8px; }

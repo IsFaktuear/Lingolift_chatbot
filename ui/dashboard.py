@@ -2,6 +2,7 @@ import streamlit as st
 
 from content import LESSONS, QUICK_PRACTICE_PROMPTS
 from datetime import datetime
+from urllib.parse import quote
 from storage import Store, level_for_xp
 
 
@@ -22,6 +23,12 @@ class DashboardPage:
         self.store = store
 
     def render(self) -> None:
+        lesson_param = st.query_params.get("lesson")
+        if lesson_param:
+            st.query_params.clear()
+            if any(lesson.title == lesson_param for lesson in LESSONS):
+                st.session_state.active_lesson = lesson_param
+            st.rerun()
         active = st.session_state.get("active_lesson")
         if active:
             lesson = next((l for l in LESSONS if l.title == active), None)
@@ -62,24 +69,19 @@ class DashboardPage:
                 card_class = "card lesson-card lesson-click featured-lesson" if lesson.featured else "card lesson-card lesson-click"
                 badge = '<div class="lesson-badge">Featured listening</div>' if (lesson.featured and not is_done) else ""
                 done_badge = '<div class="lesson-badge" style="background:var(--green);">✓ Completed</div>' if is_done else ""
+                # The whole card is a plain link: robust on every browser, no overlay hacks.
+                href = f"?lesson={quote(lesson.title)}"
                 st.markdown(
+                    f'<a href="{href}" target="_self" class="lesson-link">'
                     f'<div class="{card_class}"><div class="lesson-icon">{lesson.icon}</div>{badge}{done_badge}'
                     f'<div class="eyebrow">{lesson.category}</div><h3>{lesson.title}</h3>'
-                    f'<div class="lesson-meta">{lesson.meta}</div></div>',
+                    f'<div class="lesson-meta">{lesson.meta}</div></div></a>',
                     unsafe_allow_html=True,
                 )
-                # The first button right after the card becomes an invisible overlay,
-                # so the whole card is clickable. It must stay directly adjacent.
                 if is_done:
-                    if st.button("Review lesson", key=f"open-{lesson.title}"):
-                        st.session_state.active_lesson = lesson.title
-                        st.rerun()
                     if st.button("Batalkan", key=f"undo-{lesson.title}", use_container_width=True):
                         _confirm_undo_dialog(lesson.title, lesson.xp, self.store)
                     continue
-                if st.button("Open lesson", key=f"open-{lesson.title}"):
-                    st.session_state.active_lesson = lesson.title
-                    st.rerun()
                 if st.button(f"Tandai selesai · +{lesson.xp} XP", key=f"done-{lesson.title}", use_container_width=True):
                     if self.store.complete_lesson(lesson.title, lesson.xp):
                         st.toast(f"Lesson selesai! +{lesson.xp} XP 🎉")
