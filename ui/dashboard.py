@@ -62,30 +62,31 @@ class DashboardPage:
         done = self.store.lessons_done()
         waiting = len(LESSONS) - len(done & {lesson.title for lesson in LESSONS})
         st.markdown(f'<div class="section-label"><h2>Continue learning</h2><span>{waiting} lessons waiting</span></div>', unsafe_allow_html=True)
-        columns = st.columns(3)
-        for column, lesson in zip(columns, LESSONS):
-            with column:
-                is_done = lesson.title in done
-                card_class = "card lesson-card lesson-click featured-lesson" if lesson.featured else "card lesson-card lesson-click"
-                badge = '<div class="lesson-badge">Featured listening</div>' if (lesson.featured and not is_done) else ""
-                done_badge = '<div class="lesson-badge" style="background:var(--green);">✓ Completed</div>' if is_done else ""
-                # The whole card is a plain link: robust on every browser, no overlay hacks.
-                href = f"?lesson={quote(lesson.title)}"
-                st.markdown(
-                    f'<a href="{href}" target="_self" class="lesson-link">'
-                    f'<div class="{card_class}"><div class="lesson-icon">{lesson.icon}</div>{badge}{done_badge}'
-                    f'<div class="eyebrow">{lesson.category}</div><h3>{lesson.title}</h3>'
-                    f'<div class="lesson-meta">{lesson.meta}</div></div></a>',
-                    unsafe_allow_html=True,
-                )
-                if is_done:
-                    if st.button("Batalkan", key=f"undo-{lesson.title}", use_container_width=True):
-                        _confirm_undo_dialog(lesson.title, lesson.xp, self.store)
-                    continue
-                if st.button(f"Tandai selesai · +{lesson.xp} XP", key=f"done-{lesson.title}", use_container_width=True):
-                    if self.store.complete_lesson(lesson.title, lesson.xp):
-                        st.toast(f"Lesson selesai! +{lesson.xp} XP 🎉")
-                    st.rerun()
+        for row_start in range(0, len(LESSONS), 3):
+            columns = st.columns(3)
+            for column, lesson in zip(columns, LESSONS[row_start : row_start + 3]):
+                with column:
+                    is_done = lesson.title in done
+                    card_class = "card lesson-card lesson-click featured-lesson" if lesson.featured else "card lesson-card lesson-click"
+                    badge = '<div class="lesson-badge">Featured listening</div>' if (lesson.featured and not is_done) else ""
+                    done_badge = '<div class="lesson-badge" style="background:var(--green);">✓ Completed</div>' if is_done else ""
+                    # The whole card is a plain link: robust on every browser, no overlay hacks.
+                    href = f"?lesson={quote(lesson.title)}"
+                    st.markdown(
+                        f'<a href="{href}" target="_self" class="lesson-link">'
+                        f'<div class="{card_class}"><div class="lesson-icon">{lesson.icon}</div>{badge}{done_badge}'
+                        f'<div class="eyebrow">{lesson.category}</div><h3>{lesson.title}</h3>'
+                        f'<div class="lesson-meta">{lesson.meta}</div></div></a>',
+                        unsafe_allow_html=True,
+                    )
+                    if is_done:
+                        if st.button("Batalkan", key=f"undo-{lesson.title}", use_container_width=True):
+                            _confirm_undo_dialog(lesson.title, lesson.xp, self.store)
+                        continue
+                    if st.button(f"Tandai selesai · +{lesson.xp} XP", key=f"done-{lesson.title}", use_container_width=True):
+                        if self.store.complete_lesson(lesson.title, lesson.xp):
+                            st.toast(f"Lesson selesai! +{lesson.xp} XP 🎉")
+                        st.rerun()
 
     def _lesson_detail(self, lesson) -> None:
         if st.button("← Back to overview", key="back-overview"):
