@@ -4,6 +4,9 @@ from models import Lesson, LessonStep, QuizQuestion, VocabQuizItem, VocabularyWo
 
 QUIZ_ROUND_SIZE = 5
 XP_PER_QUIZ_ANSWER = 5
+# A lesson counts as completed when its quiz score reaches this ratio.
+# Lesson XP is always proportional to correct answers.
+LESSON_PASS_RATIO = 0.5
 
 
 LESSONS = [
@@ -11,9 +14,8 @@ LESSONS = [
         "🎧",
         "Listening",
         "At the coffee shop",
-        "8 min · 80 XP",
+        "8 min",
         featured=True,
-        xp=80,
         intro=(
             "Ordering coffee is one of the most useful real-world listening situations. "
             "In this lesson you will learn the phrases baristas actually use and train "
@@ -57,6 +59,33 @@ LESSONS = [
                 ),
                 0,
             ),
+            QuizQuestion(
+                'You are done ordering and the barista asks “Anything else?”. What is the most natural reply?',
+                (
+                    "No, that's all, thanks.",
+                    "Yes, please.",
+                    "I don't know.",
+                ),
+                0,
+            ),
+            QuizQuestion(
+                "To understand an order quickly, which words should you listen for?",
+                (
+                    "The content words: drink, size, milk and name",
+                    "Every single word, in order",
+                    "Only the first word of each sentence",
+                ),
+                0,
+            ),
+            QuizQuestion(
+                'The barista asks “Can I get a name for the order?”. What do you say?',
+                (
+                    "Sure, it's Rina.",
+                    "Large, please.",
+                    "To go, please.",
+                ),
+                0,
+            ),
         ),
         practice_prompt=(
             "Role-play with me: you are the barista and I am the customer ordering coffee. "
@@ -67,8 +96,7 @@ LESSONS = [
         "💬",
         "Speaking",
         "Small talk starters",
-        "12 min · 120 XP",
-        xp=120,
+        "12 min",
         intro=(
             "Small talk opens doors — at work, on campus, while traveling. This lesson gives "
             "you openers that actually work, and shows you what to avoid."
@@ -110,6 +138,35 @@ LESSONS = [
                 ),
                 0,
             ),
+            QuizQuestion(
+                "Which of these is an open question?",
+                (
+                    "What do you usually do on weekends?",
+                    "Do you like coffee?",
+                    "Is it cold today?",
+                    "Are you a student?",
+                ),
+                0,
+            ),
+            QuizQuestion(
+                "Which topic is usually safe with someone you just met?",
+                (
+                    "Their plans for the weekend",
+                    "How much money they earn",
+                    "Their weight",
+                    "Their religion",
+                ),
+                0,
+            ),
+            QuizQuestion(
+                'Someone asks “How\'s it going?”. What is a natural reply?',
+                (
+                    "Pretty good, thanks! How about you?",
+                    "I am going to the canteen.",
+                    "It is going by bus.",
+                ),
+                0,
+            ),
         ),
         practice_prompt=(
             "Let's practice small talk. Start a casual conversation with me as if we just met "
@@ -120,8 +177,7 @@ LESSONS = [
         "✍️",
         "Grammar",
         "Past experiences",
-        "10 min · 100 XP",
-        xp=100,
+        "10 min",
         intro=(
             "Present perfect vs past simple — the classic headache for Indonesian learners, "
             "because Bahasa Indonesia does not mark this difference. This lesson makes it click."
@@ -156,6 +212,21 @@ LESSONS = [
                 ("Have / eaten", "Did / ate", "Have / ate", "Did / eaten"),
                 0,
             ),
+            QuizQuestion(
+                "“I ___ him yesterday.” Which fits?",
+                ("saw", "have seen", "have saw", "seen"),
+                0,
+            ),
+            QuizQuestion(
+                "Which signal word usually goes with the present perfect?",
+                ("already", "yesterday", "last week", "in 2019"),
+                0,
+            ),
+            QuizQuestion(
+                "“She ___ to Bali twice.” Which fits?",
+                ("has been", "have been", "was been", "is been"),
+                0,
+            ),
         ),
         practice_prompt=(
             "Quiz me: ask me 5 questions using present perfect and past simple about my life "
@@ -166,8 +237,7 @@ LESSONS = [
         "🍽️",
         "Everyday",
         "Ordering food at a restaurant",
-        "10 min · 100 XP",
-        xp=100,
+        "10 min",
         intro=(
             "Eating out is a perfect chance to practice English — the script is short, "
             "the staff are patient, and you get food at the end. This lesson covers "
@@ -212,6 +282,29 @@ LESSONS = [
                 ),
                 0,
             ),
+            QuizQuestion(
+                "Which sentence sounds most natural when ordering?",
+                (
+                    "I'll have the grilled chicken, please.",
+                    "I want chicken. Give me.",
+                    "Chicken is what I order now.",
+                ),
+                0,
+            ),
+            QuizQuestion(
+                "In the US, what do people usually call the bill at a restaurant?",
+                ("The check", "The menu", "The tip"),
+                0,
+            ),
+            QuizQuestion(
+                'You pay and say “Keep the change.” What do you mean?',
+                (
+                    "The waiter can keep the extra money",
+                    "You want your change back quickly",
+                    "You want to change your order",
+                ),
+                0,
+            ),
         ),
         practice_prompt=(
             "Role-play with me: you are the waiter and I am the customer at an Indonesian "
@@ -222,8 +315,7 @@ LESSONS = [
         "✈️",
         "Travel",
         "At the airport",
-        "12 min · 120 XP",
-        xp=120,
+        "12 min",
         intro=(
             "Airports run on English. Check-in, security, boarding — the same phrases "
             "repeat everywhere in the world. Learn them once, use them forever."
@@ -267,6 +359,33 @@ LESSONS = [
                 ),
                 0,
             ),
+            QuizQuestion(
+                'At check-in the staff asks “Aisle or window?”. What do they want to know?',
+                (
+                    "Which seat you prefer",
+                    "Which gate you need",
+                    "Which bag you will check in",
+                ),
+                0,
+            ),
+            QuizQuestion(
+                "Your bag didn't arrive. What is the best thing to say at the desk?",
+                (
+                    "My luggage didn't arrive. Could you help me, please?",
+                    "Where is my bag?! This is terrible!",
+                    "Bag. Lost. Help.",
+                ),
+                0,
+            ),
+            QuizQuestion(
+                '“Boarding starts at 9:40 at gate 12.” What happens at 9:40?',
+                (
+                    "Passengers start getting on the plane",
+                    "The plane lands",
+                    "Check-in opens",
+                ),
+                0,
+            ),
         ),
         practice_prompt=(
             "Role-play with me: you are the check-in staff and I am a nervous first-time "
@@ -277,8 +396,7 @@ LESSONS = [
         "💼",
         "Work",
         "Job interview basics",
-        "15 min · 150 XP",
-        xp=150,
+        "15 min",
         intro=(
             "Interviews are stressful in any language. In English, a few strong, simple "
             "sentences beat complicated ones. This lesson gives you the core answers "
@@ -324,6 +442,33 @@ LESSONS = [
                 ),
                 0,
             ),
+            QuizQuestion(
+                'The interviewer asks “Do you have any questions for us?”. What is best?',
+                (
+                    "Ask what a typical day in the role looks like",
+                    "Say “No, I have no questions.”",
+                    "Ask how soon you can take a holiday",
+                ),
+                0,
+            ),
+            QuizQuestion(
+                'Which is the best answer to “What is your strength?”',
+                (
+                    "“Problem-solving — I enjoy debugging and finding the cause of a bug.”",
+                    "“I am good at everything.”",
+                    "“I don't really have one.”",
+                ),
+                0,
+            ),
+            QuizQuestion(
+                '“Why do you want this job?” Which answer is strongest?',
+                (
+                    "“I want to grow as a developer, and your team builds things I care about.”",
+                    "“I just need any job.”",
+                    "“My friend works here.”",
+                ),
+                0,
+            ),
         ),
         practice_prompt=(
             "Do a mock job interview with me for a junior IT support role. Ask one "
@@ -343,6 +488,19 @@ QUICK_PRACTICE_PROMPTS = [
     "Order a coffee",
     "Talk about last weekend",
 ]
+
+
+def shuffled_question(
+    question: QuizQuestion, seed: int | str
+) -> tuple[tuple[str, ...], int]:
+    """Return (options, answer_index) in a stable shuffled order for this seed.
+
+    Lessons are authored with the correct option first; shuffling here keeps
+    the right answer from always sitting at the top."""
+    rng = random.Random(str(seed))
+    order = list(range(len(question.options)))
+    rng.shuffle(order)
+    return tuple(question.options[i] for i in order), order.index(question.answer)
 
 
 def build_vocab_quiz(
