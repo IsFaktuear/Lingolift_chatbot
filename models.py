@@ -1,5 +1,8 @@
 from dataclasses import dataclass
 
+# Every correct quiz answer in a lesson is worth this much XP.
+XP_PER_LESSON_QUESTION = 20
+
 
 @dataclass(frozen=True)
 class LessonStep:
@@ -11,7 +14,7 @@ class LessonStep:
 class QuizQuestion:
     question: str
     options: tuple[str, ...]
-    answer: int  # index of the correct option
+    answer: int  # authoring convention: option 0 is correct; shuffled at display time
 
 
 @dataclass(frozen=True)
@@ -28,11 +31,15 @@ class Lesson:
     title: str
     meta: str
     featured: bool = False
-    xp: int = 0
     intro: str = ""
     steps: tuple[LessonStep, ...] = ()
     quiz: tuple[QuizQuestion, ...] = ()
     practice_prompt: str = ""
+
+    @property
+    def xp(self) -> int:
+        """Max XP for the lesson = number of quiz questions x XP per question."""
+        return len(self.quiz) * XP_PER_LESSON_QUESTION
 
 
 @dataclass(frozen=True)

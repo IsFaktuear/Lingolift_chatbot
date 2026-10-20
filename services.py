@@ -1,20 +1,36 @@
 import os
-from typing import Any
+import sys
+from pathlib import Path
+from typing import Any, Iterator
 
 from dotenv import load_dotenv
 
 try:
     from openai import OpenAI
-except ImportError:
-    OpenAI = None
 
-load_dotenv(override=True)
+    OPENAI_IMPORT_ERROR = None
+except Exception as exc:  # not installed, or installed but broken
+    OpenAI = None
+    OPENAI_IMPORT_ERROR = f"{type(exc).__name__}: {exc}"
+
+# Always read the .env next to this file, no matter which folder the app is
+# started from. override=True: values in .env win over old system variables.
+ENV_PATH = Path(__file__).resolve().parent / ".env"
+load_dotenv(ENV_PATH, override=True)
+
+# Only the most recent turns are sent to the model, so cost and latency
+# stay flat no matter how long the saved history grows.
+MAX_HISTORY_MESSAGES = 20
+
+
+class TutorError(Exception):
+    """Raised when the AI service cannot produce a reply."""
 
 
 class TutorService:
     DEMO_MESSAGE = (
-        "Demo mode: I am your English tutor. Add `OPENAI_API_KEY` to your environment "
-        "to activate live AI conversations. For now, try asking: *How do I use present perfect?*"
+        "Demo mode: I am your English tutor. Add `OPENAI_API_KEY` to your `.env` file "
+        "to activate live AI conversations. Demo chats are not saved and give no XP."
     )
     SYSTEM_MESSAGE = (
         "You are LingoLift, a warm English tutor. Reply mostly in English, "
@@ -26,52 +42,56 @@ class TutorService:
     )
 
     def __init__(self) -> None:
-        self.api_key = os.getenv("OPENAI_API_KEY")
-        self.base_url = os.getenv("OPENAI_BASE_URL", "https://agentrouter.org/v1")
-        self.model = os.getenv("OPENAI_MODEL", "deepseek-v4-flash")
-        self.stt_model = os.getenv("OPENAI_STT_MODEL", "whisper-1")
+        self.api_key = (os.getenv("OPENAI_API_KEY") or "").strip() or None
+        # Empty/unset -> the official OpenAI endpoint. Set OPENAI_BASE_URL
+        # explicitly to use another OpenAI-compatible provider, so your key is
+        # never sent to a third party by accident.
+        self.base_url = os.getenv("OPENAI_BASE_URL") or None
+        self.model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
+    def setup_problem(self) -> str | None:
+        """Explain in plain words why live AI is off, or None when it is on."""
+        if OpenAI is None:
+            return (
+                f"The `openai` package can't be loaded by the Python running this app: `{sys.executable}` "
+                f"({OPENAI_IMPORT_ERROR}). Install it into THAT Python: "
+                f"`\"{sys.executable}\" -m pip install -r requirements.txt`"
+            )
+        if self.api_key:
+            return None
+        if not ENV_PATH.exists():
+            return f"No `.env` file found. Create it here: `{ENV_PATH}`"
+        return "`.env` was found, but `OPENAI_API_KEY` is empty or missing in it."
+
+    @property
+    def is_live(self) -> bool:
+        return bool(self.api_key) and OpenAI is not None
 
     def _client(self) -> Any:
-        if not self.api_key or OpenAI is None:
+        if not self.is_live:
             return None
         return OpenAI(
             api_key=self.api_key,
             base_url=self.base_url,
-            timeout=20.0,
-            max_retries=0,
+            timeout=30.0,
+            max_retries=1,
         )
 
-    def reply(self, messages: list[dict[str, str]]) -> str:
+    def reply_stream(self, messages: list[dict[str, str]]) -> Iterator[str]:
+        """Yield the assistant reply in chunks. Raises TutorError on failure,
+        so callers can avoid saving an error message as if it were a reply."""
         client = self._client()
         if client is None:
-            return self.DEMO_MESSAGE
-
-        response = client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": self.SYSTEM_MESSAGE},
-                *messages,
-            ],
-            temperature=0.7,
-            max_tokens=350,
-        )
-        return response.choices[0].message.content or "Let's practice that together."
-
-    def reply_stream(self, messages: list[dict[str, str]]):
-        """Yield the assistant reply in chunks for a streaming UI."""
-        client = self._client()
-        if client is None:
-            yield self.DEMO_MESSAGE
-            return
+            raise TutorError("No API key configured.")
         try:
             stream = client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": self.SYSTEM_MESSAGE},
-                    *messages,
+                    *messages[-MAX_HISTORY_MESSAGES:],
                 ],
                 temperature=0.7,
-                max_tokens=350,
+                max_tokens=800,
                 stream=True,
             )
             for chunk in stream:
@@ -79,23 +99,5 @@ class TutorService:
                 delta = getattr(choices[0].delta, "content", None) if choices else None
                 if delta:
                     yield delta
-        except Exception:
-            yield "I couldn't reach the AI service right now. Check your API settings."
-
-    def transcribe(self, audio_bytes: bytes) -> str | None:
-        """Speech-to-text via the configured OpenAI-compatible API.
-
-        Returns the transcribed text, or None when transcription is unavailable
-        (no API key, unsupported endpoint, network error)."""
-        client = self._client()
-        if client is None or not audio_bytes:
-            return None
-        try:
-            result = client.audio.transcriptions.create(
-                model=self.stt_model,
-                file=("speech.wav", audio_bytes),
-            )
-            text = (getattr(result, "text", "") or "").strip()
-            return text or None
-        except Exception:
-            return None
+        except Exception as exc:  # network, auth, quota, bad model name...
+            raise TutorError(f"{type(exc).__name__}: {exc}") from exc
